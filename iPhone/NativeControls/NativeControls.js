@@ -77,13 +77,32 @@ NativeControls.prototype.hideTabBar = function(animate) {
  */
 NativeControls.prototype.createTabBarItem = function(name, label, image, options) {
    
-        var tag = this.tabBarTag++;
+    var tag = this.tabBarTag++;
     if (options && 'onSelect' in options && typeof(options['onSelect']) == 'function') {
         this.tabBarCallbacks[tag] = {'onSelect':options.onSelect,'name':name};
         //delete options.onSelect;
     }
        
     PhoneGap.exec("NativeControls.createTabBarItem", name, label, image, tag, options);
+};
+/**
+ * Create a new tab bar item for use on a previously created tab bar.  Use ::showTabBarItems to show the new item on the tab bar.
+ * This method allows the use of base64 encoded images instead of local stored files.
+ *
+ * @param {String} name internal name to refer to this tab by
+ * @param {String} [title] title text to show on the tab, or null if no text should be shown
+ * @param {String} [base64image] base64 encoded image
+ * @param {Object} [options] Options for customizing the individual tab item
+ *  - \c badge value to display in the optional circular badge on the item; if null or unspecified, the badge will be hidden
+ */
+NativeControls.prototype.createTabBarItemBase64 = function(name, label, base64image, options) {
+   
+    var tag = this.tabBarTag++;
+    if (options && 'onSelect' in options && typeof(options['onSelect']) == 'function') {
+        this.tabBarCallbacks[tag] = {'onSelect':options.onSelect,'name':name};
+    }
+       
+    PhoneGap.exec("NativeControls.updateTabBarItemBase64", name, label, base64image, tag, options);
 };
  
 /**
@@ -107,7 +126,10 @@ NativeControls.prototype.updateTabBarItem = function(name, options) {
  */
 NativeControls.prototype.showTabBarItems = function() {
     var parameters = [ "NativeControls.showTabBarItems" ];
-    for (var i = 0; i < arguments.length; i++) {
+    var num_items =  arguments.length;
+    if (num_items>6) num_items = 6;
+     
+    for (var i = 0; i < num_items; i++) {
         parameters.push(arguments[i]);
     }
     PhoneGap.exec.apply(this, parameters);

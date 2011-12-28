@@ -38,10 +38,11 @@
 - (void)hideTabBar:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)showTabBarItems:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)createTabBarItem:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)updateTabBarItem:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)createTabBarItem:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)updateTabBarItemBase64:(NSArray*)arguments withDict:(NSDictionary*)options;
+
 - (void)selectTabBarItem:(NSArray*)arguments withDict:(NSDictionary*)options;
-
-
+- (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize;
 
 /* Tool Bar methods
  */

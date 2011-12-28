@@ -234,6 +234,112 @@
 	[item release];
 }
 
+/**
+ * Create a new tab bar item for use on a previously created tab bar.  Use ::showTabBarItems to show the new item on the tab bar.
+ * This method allows the use of base64 encoded images instead of local stored files.
+ * 
+ * @brief create a tab bar item
+ * @param arguments Parameters used to create the tab bar
+ *  -# \c name internal name to refer to this tab by
+ *  -# \c title title text to show on the tab, or null if no text should be shown
+ *  -# \c base64image base64 encoded image
+ *  -# \c tag unique number to be used as an internal reference to this button
+ * @param options Options for customizing the individual tab item
+ *  - \c badge value to display in the optional circular badge on the item; if nil or unspecified, the badge will be hidden
+ */
+- (void)updateTabBarItemBase64:(NSArray*)arguments withDict:(NSDictionary*)options
+{
+    if (!tabBar)
+        [self createTabBar:nil withDict:nil];
+    
+    NSString  *name      = [arguments objectAtIndex:0];
+    NSString  *title     = [arguments objectAtIndex:1];
+    NSString  *base64image = [arguments objectAtIndex:2];
+    int tag              = [[arguments objectAtIndex:3] intValue];
+
+
+
+    //This snippet is based on http://stackoverflow.com/questions/1366837/how-to-display-a-base64-image-within-a-uiimageview
+    NSMutableData *mutableData = nil;
+    unsigned long ixtext = 0;
+                        unsigned long lentext = 0;
+                        unsigned char ch = 0;
+                        unsigned char inbuf[4], outbuf[3];
+                        short i = 0, ixinbuf = 0;
+                        BOOL flignore = NO;
+                        BOOL flendtext = NO;
+                        NSData *base64Data = nil;
+                        const unsigned char *base64Bytes = nil;
+
+    base64Data = [base64image dataUsingEncoding:NSASCIIStringEncoding];
+    base64Bytes = [base64Data bytes];
+    mutableData = [NSMutableData dataWithCapacity:[base64Data length]];
+    lentext = [base64Data length];
+
+    
+    while( YES ) {
+           if( ixtext >= lentext ) break;
+           ch = base64Bytes[ixtext++];
+           flignore = NO;
+
+           if( ( ch >= 'A' ) && ( ch <= 'Z' ) ) ch = ch - 'A';
+           else if( ( ch >= 'a' ) && ( ch <= 'z' ) ) ch = ch - 'a' + 26;
+           else if( ( ch >= '0' ) && ( ch <= '9' ) ) ch = ch - '0' + 52;
+        else if( ch == '+' ) ch = 62;
+           else if( ch == '=' ) flendtext = YES;
+           else if( ch == '/' ) ch = 63;
+           else flignore = YES;
+
+           if( ! flignore ) {
+            short ctcharsinbuf = 3;
+            BOOL flbreak = NO;
+
+            if( flendtext ) {
+                    if( ! ixinbuf ) break;
+                    if( ( ixinbuf == 1 ) || ( ixinbuf == 2 ) ) ctcharsinbuf = 1;
+                    else ctcharsinbuf = 2;
+                    ixinbuf = 3;
+                    flbreak = YES;
+            }
+
+            inbuf [ixinbuf++] = ch;
+
+            if( ixinbuf == 4 ) {
+                    ixinbuf = 0;
+                    outbuf [0] = ( inbuf[0] << 2 ) | ( ( inbuf[1] & 0x30) >> 4 );
+                    outbuf [1] = ( ( inbuf[1] & 0x0F ) << 4 ) | ( ( inbuf[2] & 0x3C ) >> 2 );
+                    outbuf [2] = ( ( inbuf[2] & 0x03 ) << 6 ) | ( inbuf[3] & 0x3F );
+
+                    for( i = 0; i < ctcharsinbuf; i++ )
+                            [mutableData appendBytes:&outbuf[i] length:1];
+            }
+
+            if( flbreak )  break;
+           }
+    }
+
+    UITabBarItem *item  = [[UITabBarItem alloc] initWithTitle:title image:[self imageWithImage:[UIImage imageWithData: [NSData dataWithData:mutableData]] scaledToSize:CGSizeMake(30, 30)]   tag:tag];
+    
+    if ([options objectForKey:@"badge"])
+        item.badgeValue = [options objectForKey:@"badge"];
+    
+    [tabBarItems setObject:item forKey:name];
+	[item release];
+}
+
+/**
+* Resize an UIImage.
+* This method was taken from http://ofcodeandmen.poltras.com/2008/10/30/undocumented-uiimage-resizing/
+* @param image the image to resize
+* @param scaledToSize the new image size
+*/
+- (UIImage *)imageWithImage:(UIImage *)image scaledToSize:(CGSize)newSize {
+    UIGraphicsBeginImageContext(newSize);
+    [image drawInRect:CGRectMake(0, 0, newSize.width, newSize.height)];
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();    
+    UIGraphicsEndImageContext();
+    return newImage;
+}
 
 /**
  * Update an existing tab bar item to change its badge value.
